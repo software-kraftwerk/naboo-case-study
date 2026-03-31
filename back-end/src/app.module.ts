@@ -31,7 +31,7 @@ import { appConfig } from './config/app.config';
         return {
           autoSchemaFile: 'schema.gql',
           sortSchema: true,
-          playground: true,
+          playground: !configService.get<boolean>('isProduction'),
           buildSchemaOptions: { numberScalarMode: 'integer' },
           context: async ({ req, res }: { req: Request; res: Response }) => {
             const token =
