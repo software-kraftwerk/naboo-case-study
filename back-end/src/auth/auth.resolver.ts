@@ -21,6 +21,8 @@ export class AuthResolver {
     ctx.res.cookie('jwt', data.access_token, {
       httpOnly: true,
       domain: this.configService.get('FRONTEND_DOMAIN'),
+      secure: true,
+      sameSite: 'strict',
     });
 
     return data;
