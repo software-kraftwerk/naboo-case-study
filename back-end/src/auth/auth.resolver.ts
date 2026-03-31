@@ -3,6 +3,7 @@ import { SignInDto, SignInInput, SignUpInput } from './types';
 import { AuthService } from './auth.service';
 import { User } from 'src/user/user.schema';
 import { ConfigService } from '@nestjs/config';
+import { ContextWithJWTPayload } from './types/context';
 
 @Resolver('Auth')
 export class AuthResolver {
@@ -14,7 +15,7 @@ export class AuthResolver {
   @Mutation(() => SignInDto)
   async login(
     @Args('signInInput') loginUserDto: SignInInput,
-    @Context() ctx: any,
+    @Context() ctx: ContextWithJWTPayload,
   ): Promise<SignInDto> {
     const data = await this.authService.signIn(loginUserDto);
     ctx.res.cookie('jwt', data.access_token, {
@@ -33,7 +34,7 @@ export class AuthResolver {
   }
 
   @Mutation(() => Boolean)
-  async logout(@Context() ctx: any): Promise<boolean> {
+  async logout(@Context() ctx: ContextWithJWTPayload): Promise<boolean> {
     ctx.res.clearCookie('jwt', {
       httpOnly: true,
       domain: this.configService.get('FRONTEND_DOMAIN'),
