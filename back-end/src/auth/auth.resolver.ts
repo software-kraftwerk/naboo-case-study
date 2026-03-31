@@ -2,10 +2,14 @@ import { Resolver, Mutation, Args, Context } from '@nestjs/graphql';
 import { SignInDto, SignInInput, SignUpInput } from './types';
 import { AuthService } from './auth.service';
 import { User } from 'src/user/user.schema';
+import { ConfigService } from '@nestjs/config';
 
 @Resolver('Auth')
 export class AuthResolver {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private configService: ConfigService,
+  ) {}
 
   @Mutation(() => SignInDto)
   async login(
@@ -15,7 +19,7 @@ export class AuthResolver {
     const data = await this.authService.signIn(loginUserDto);
     ctx.res.cookie('jwt', data.access_token, {
       httpOnly: true,
-      domain: process.env.FRONTEND_DOMAIN,
+      domain: this.configService.get('FRONTEND_DOMAIN'),
     });
 
     return data;
@@ -32,7 +36,7 @@ export class AuthResolver {
   async logout(@Context() ctx: any): Promise<boolean> {
     ctx.res.clearCookie('jwt', {
       httpOnly: true,
-      domain: process.env.FRONTEND_DOMAIN,
+      domain: this.configService.get('FRONTEND_DOMAIN'),
     });
     return true;
   }
