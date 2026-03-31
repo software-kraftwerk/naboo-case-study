@@ -14,10 +14,11 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';
 import { PayloadDto } from './auth/types/jwtPayload.dto';
+import { appConfig } from './config/app.config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, load: [appConfig] }),
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
       imports: [JwtModule],
