@@ -34,8 +34,7 @@ import { appConfig } from './config/app.config';
           playground: !configService.get<boolean>('isProduction'),
           buildSchemaOptions: { numberScalarMode: 'integer' },
           context: async ({ req, res }: { req: Request; res: Response }) => {
-            const token =
-              req.headers.jwt ?? (req.cookies && req.cookies['jwt']);
+            const token: string | undefined = req.cookies && req.cookies.jwt;
 
             let jwtPayload: PayloadDto | null = null;
             if (token) {
