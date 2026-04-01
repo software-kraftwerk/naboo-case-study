@@ -61,8 +61,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setIsLoading(true);
       await signin({ variables: { signInInput: input } });
+      await router.push("/profil");
       await getUser().then((res) => setUser(res.data?.getMe || null));
-      router.push("/profil");
     } catch (err) {
       snackbar.error("Une erreur est survenue");
     } finally {
