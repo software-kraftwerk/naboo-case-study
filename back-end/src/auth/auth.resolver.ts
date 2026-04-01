@@ -17,8 +17,8 @@ export class AuthResolver {
     @Args('signInInput') loginUserDto: SignInInput,
     @Context() ctx: ContextWithJWTPayload,
   ): Promise<boolean> {
-    const data = await this.authService.signIn(loginUserDto);
-    ctx.res.cookie('jwt', data.access_token, {
+    const token = await this.authService.signIn(loginUserDto);
+    ctx.res.cookie('jwt', token, {
       httpOnly: true,
       domain: this.configService.get('FRONTEND_DOMAIN'),
       secure: true,
