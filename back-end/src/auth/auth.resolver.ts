@@ -23,11 +23,14 @@ export class AuthResolver {
     @Context() ctx: ContextWithJWTPayload,
   ): Promise<boolean> {
     const token = await this.authService.signIn(loginUserDto);
+    const expiresIn = Number(this.configService.get('JWT_EXPIRATION_TIME'));
+
     ctx.res.cookie('jwt', token, {
       httpOnly: true,
       domain: this.configService.get('FRONTEND_DOMAIN'),
       secure: true,
       sameSite: 'strict',
+      maxAge: expiresIn * 1000,
     });
 
     return true;
