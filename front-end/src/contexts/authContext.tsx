@@ -16,7 +16,12 @@ import Signin from "@/graphql/mutations/auth/signin";
 import Signup from "@/graphql/mutations/auth/signup";
 import GetUser from "@/graphql/queries/auth/getUser";
 import { useSnackbar } from "@/hooks";
-import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
+import {
+  useLazyQuery,
+  useMutation,
+  useQuery,
+  useApolloClient,
+} from "@apollo/client";
 import { useRouter } from "next/router";
 import { createContext, useEffect, useState } from "react";
 
@@ -42,6 +47,7 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const snackbar = useSnackbar();
+  const apolloClient = useApolloClient();
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<GetUserQuery["getMe"] | null>(null);
   const router = useRouter();
@@ -66,6 +72,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setIsLoading(true);
       await signin({ variables: { signInInput: input } });
+      await apolloClient.resetStore();
       await router.push("/profil");
       await getUser().then((res) => setUser(res.data?.getMe || null));
     } catch (err) {
@@ -91,6 +98,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setIsLoading(true);
       await logout();
+      await apolloClient.clearStore();
       setUser(null);
       router.push("/");
     } catch (err) {
