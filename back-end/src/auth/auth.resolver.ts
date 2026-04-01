@@ -1,9 +1,12 @@
 import { Resolver, Mutation, Args, Context } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { SignInInput, SignUpInput } from './types';
 import { AuthService } from './auth.service';
 import { User } from 'src/user/user.schema';
 import { ConfigService } from '@nestjs/config';
 import { ContextWithJWTPayload } from './types/context';
+import { GqlThrottlerGuard } from './gql-throttler.guard';
 
 @Resolver('Auth')
 export class AuthResolver {
@@ -13,6 +16,8 @@ export class AuthResolver {
   ) {}
 
   @Mutation(() => Boolean)
+  @UseGuards(GqlThrottlerGuard)
+  @Throttle({ login: { limit: 5, ttl: 60_000 } })
   async login(
     @Args('signInInput') loginUserDto: SignInInput,
     @Context() ctx: ContextWithJWTPayload,

@@ -12,6 +12,7 @@ import { UserModule } from './user/user.module';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { JwtModule, JwtService } from '@nestjs/jwt';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { PayloadDto } from './auth/types/jwtPayload.dto';
 import { appConfig } from './config/app.config';
@@ -19,6 +20,7 @@ import { appConfig } from './config/app.config';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [appConfig] }),
+    ThrottlerModule.forRoot([{ name: 'login', ttl: 60_000, limit: 0 }]),
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
       imports: [JwtModule],
