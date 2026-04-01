@@ -52,12 +52,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<GetUserQuery["getMe"] | null>(null);
   const router = useRouter();
 
-  const [getUser] = useLazyQuery<GetUserQuery, GetUserQueryVariables>(GetUser);
   const [signin] = useMutation<SigninMutation, SigninMutationVariables>(Signin);
   const [signup] = useMutation<SignupMutation, SignupMutationVariables>(Signup);
   const [logout] = useMutation<LogoutMutation, LogoutMutationVariables>(Logout);
 
-  useQuery(GetUser, {
+  const { refetch: getUser } = useQuery(GetUser, {
     onCompleted: (data) => {
       setUser(data.getMe || null);
       setIsLoading(false);
