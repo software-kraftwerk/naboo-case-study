@@ -16,7 +16,7 @@ import Signin from "@/graphql/mutations/auth/signin";
 import Signup from "@/graphql/mutations/auth/signup";
 import GetUser from "@/graphql/queries/auth/getUser";
 import { useSnackbar } from "@/hooks";
-import { useLazyQuery, useMutation } from "@apollo/client";
+import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import { useRouter } from "next/router";
 import { createContext, useEffect, useState } from "react";
 
@@ -51,11 +51,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [signup] = useMutation<SignupMutation, SignupMutationVariables>(Signup);
   const [logout] = useMutation<LogoutMutation, LogoutMutationVariables>(Logout);
 
-  useEffect(() => {
-    getUser()
-      .then((res) => setUser(res.data?.getMe || null))
-      .finally(() => setIsLoading(false));
-  }, [getUser]);
+  useQuery(GetUser, {
+    onCompleted: (data) => {
+      setUser(data.getMe || null);
+      setIsLoading(false);
+    },
+    onError: (err) => {
+      snackbar.error(err.message);
+      setIsLoading(false);
+    },
+  });
 
   const handleSignin = async (input: SignInInput) => {
     try {
