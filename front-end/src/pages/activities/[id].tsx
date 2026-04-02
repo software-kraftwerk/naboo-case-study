@@ -71,7 +71,7 @@ export default function ActivityDetails({ activity }: ActivityDetailsProps) {
               </Badge>
               {isAuthenticated && (
                 <ActionIcon
-                  onClick={() => toggle(activity.id)}
+                  onClick={() => toggle(activity)}
                   color="red"
                   variant="subtle"
                   size="lg"

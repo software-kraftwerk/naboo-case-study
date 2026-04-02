@@ -52,7 +52,7 @@ export function ActivityListItem({ activity }: ActivityListItemProps) {
         </Link>
         {isAuthenticated && (
           <ActionIcon
-            onClick={() => toggle(activity.id)}
+            onClick={() => toggle(activity)}
             color="red"
             variant="subtle"
             size="lg"
