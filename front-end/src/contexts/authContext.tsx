@@ -53,21 +53,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [signup] = useMutation<SignupMutation, SignupMutationVariables>(Signup);
   const [logout] = useMutation<LogoutMutation, LogoutMutationVariables>(Logout);
 
-  // Use queryData directly so any Apollo cache write (e.g. from useFavoriteActivity)
-  // reactively updates the user without a network refetch.
-  const { data: queryData } = useQuery<GetUserQuery, GetUserQueryVariables>(
-    GetUser,
-    {
-      onError: () => setIsLoading(false),
-    },
-  );
-
-  useEffect(() => {
-    if (queryData !== undefined) {
-      setUser(queryData.getMe ?? null);
+  useQuery<GetUserQuery, GetUserQueryVariables>(GetUser, {
+    onCompleted: (data) => {
+      setUser(data.getMe);
       setIsLoading(false);
-    }
-  }, [queryData]);
+    },
+    onError: () => setIsLoading(false),
+  });
 
   const handleSignin = async (input: SignInInput) => {
     try {
@@ -111,7 +103,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: !!user, isLoading, handleSignin, handleSignup, handleLogout }}
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        handleSignin,
+        handleSignup,
+        handleLogout,
+      }}
     >
       {children}
     </AuthContext.Provider>
