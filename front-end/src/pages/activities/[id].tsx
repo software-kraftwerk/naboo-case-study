@@ -5,7 +5,17 @@ import {
   GetActivityQueryVariables,
 } from "@/graphql/generated/types";
 import GetActivity from "@/graphql/queries/activity/getActivity";
-import { Badge, Flex, Grid, Group, Image, Text } from "@mantine/core";
+import { useFavoriteActivities } from "@/hooks";
+import {
+  ActionIcon,
+  Badge,
+  Flex,
+  Grid,
+  Group,
+  Image,
+  Text,
+} from "@mantine/core";
+import { IconHeart, IconHeartFilled } from "@tabler/icons-react";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -31,6 +41,7 @@ export const getServerSideProps: GetServerSideProps<
 
 export default function ActivityDetails({ activity }: ActivityDetailsProps) {
   const router = useRouter();
+  const { isFavorite, toggle, isAuthenticated } = useFavoriteActivities();
 
   return (
     <>
@@ -57,6 +68,20 @@ export default function ActivityDetails({ activity }: ActivityDetailsProps) {
               <Badge color="yellow" variant="light">
                 {`${activity.price}€/j`}
               </Badge>
+              {isAuthenticated && (
+                <ActionIcon
+                  onClick={() => toggle(activity.id)}
+                  color="red"
+                  variant="subtle"
+                  size="lg"
+                >
+                  {isFavorite(activity.id) ? (
+                    <IconHeartFilled size="1.2rem" />
+                  ) : (
+                    <IconHeart size="1.2rem" />
+                  )}
+                </ActionIcon>
+              )}
             </Group>
             <Text size="sm">{activity.description}</Text>
             <Text size="sm" color="dimmed">

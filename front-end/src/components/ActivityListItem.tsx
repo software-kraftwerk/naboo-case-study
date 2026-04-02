@@ -1,6 +1,16 @@
 import { ActivityFragment } from "@/graphql/generated/types";
+import { useFavoriteActivities } from "@/hooks";
 import { useGlobalStyles } from "@/utils";
-import { Box, Button, Flex, Image, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Flex,
+  Group,
+  Image,
+  Text,
+} from "@mantine/core";
+import { IconHeart, IconHeartFilled } from "@tabler/icons-react";
 import Link from "next/link";
 
 interface ActivityListItemProps {
@@ -9,6 +19,8 @@ interface ActivityListItemProps {
 
 export function ActivityListItem({ activity }: ActivityListItemProps) {
   const { classes } = useGlobalStyles();
+  const { isFavorite, toggle, isAuthenticated } = useFavoriteActivities();
+  const activityIsFavorite = isFavorite(activity.id);
 
   return (
     <Flex align="center" justify="space-between">
@@ -30,11 +42,27 @@ export function ActivityListItem({ activity }: ActivityListItemProps) {
           >{`${activity.price}€/j`}</Text>
         </Box>
       </Flex>
-      <Link href={`/activities/${activity.id}`} className={classes.link}>
-        <Button variant="outline" color="dark">
-          Voir plus
-        </Button>
-      </Link>
+      <Group>
+        <Link href={`/activities/${activity.id}`} className={classes.link}>
+          <Button variant="outline" color="dark">
+            Voir plus
+          </Button>
+        </Link>
+        {isAuthenticated && (
+          <ActionIcon
+            onClick={() => toggle(activity.id)}
+            color="red"
+            variant="subtle"
+            size="lg"
+          >
+            {activityIsFavorite ? (
+              <IconHeartFilled size="1.2rem" />
+            ) : (
+              <IconHeart size="1.2rem" />
+            )}
+          </ActionIcon>
+        )}
+      </Group>
     </Flex>
   );
 }

@@ -3,7 +3,7 @@ import { Route, SubRoute } from "./types";
 
 export const checkRouteAccess = (
   route: Route | SubRoute,
-  user: GetUserQuery["getMe"] | null
+  user: GetUserQuery["getMe"] | null,
 ) => {
   if (user) {
     if (route.requiredAuth === undefined || route.requiredAuth === true) {
@@ -19,13 +19,13 @@ export const checkRouteAccess = (
 
 export const getFilteredRoutes = (
   routes: Route[],
-  user: GetUserQuery["getMe"] | null
+  user: GetUserQuery["getMe"] | null,
 ) => {
   return routes
     .map((route) => {
       if (Array.isArray(route.route)) {
         const filteredSubRoutes = route.route.filter((subRoute) =>
-          checkRouteAccess(subRoute, user)
+          checkRouteAccess(subRoute, user),
         );
         return { ...route, route: filteredSubRoutes };
       } else {
