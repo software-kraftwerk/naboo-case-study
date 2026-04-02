@@ -10,7 +10,7 @@ export class UserResolver {
   @ResolveField(() => [Activity])
   async favoriteActivities(@Parent() user: User): Promise<Activity[]> {
     return this.userService.getFavoriteActivitiesFromIds(
-      user.favoriteActivityIds || [],
+      user.favoriteActivityIds,
     );
   }
 }
