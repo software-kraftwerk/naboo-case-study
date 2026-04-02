@@ -13,7 +13,7 @@ import RemoveFavoriteActivity from "@/graphql/mutations/favorite/removeFavoriteA
 import ReorderFavoriteActivities from "@/graphql/mutations/favorite/reorderFavoriteActivities";
 import GetUser from "@/graphql/queries/auth/getUser";
 import { ApolloCache, useMutation } from "@apollo/client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "./useAuth";
 
 // Updates the favoriteActivities field of GetUser directly in cache — no network refetch.
@@ -74,36 +74,51 @@ export function useFavoriteActivities() {
     },
   });
 
-  const add = (activityId: string) => {
-    setFavoriteIds((prev) => [...prev, activityId]);
-    return addMutation({ variables: { activityId } });
-  };
+  const add = useCallback(
+    (activityId: string) => {
+      setFavoriteIds((prev) => [...prev, activityId]);
+      return addMutation({ variables: { activityId } });
+    },
+    [addMutation],
+  );
 
-  const remove = (activityId: string) => {
-    setFavoriteIds((prev) => prev.filter((id) => id !== activityId));
-    return removeMutation({ variables: { activityId } });
-  };
+  const remove = useCallback(
+    (activityId: string) => {
+      setFavoriteIds((prev) => prev.filter((id) => id !== activityId));
+      return removeMutation({ variables: { activityId } });
+    },
+    [removeMutation],
+  );
 
-  const toggle = (activityId: string) => {
-    if (favoriteIds.includes(activityId)) return remove(activityId);
-    return add(activityId);
-  };
+  const toggle = useCallback(
+    (activityId: string) => {
+      if (favoriteIds.includes(activityId)) return remove(activityId);
+      return add(activityId);
+    },
+    [favoriteIds, add, remove],
+  );
 
-  const reorder = (activityIds: string[]) => {
-    setFavoriteIds(activityIds);
-    return reorderMutation({ variables: { activityIds } });
-  };
+  const reorder = useCallback(
+    (activityIds: string[]) => {
+      setFavoriteIds(activityIds);
+      return reorderMutation({ variables: { activityIds } });
+    },
+    [reorderMutation],
+  );
 
-  const isFavorite = (activityId: string) => favoriteIds.includes(activityId);
+  const isFavorite = useCallback(
+    (activityId: string) => favoriteIds.includes(activityId),
+    [favoriteIds],
+  );
 
-  const getAll = (): ActivityFragment[] => {
+  const getAll = useCallback((): ActivityFragment[] => {
     const byId = new Map(
       (user?.favoriteActivities ?? []).map((a) => [a.id, a]),
     );
     return favoriteIds
       .map((id) => byId.get(id))
       .filter(Boolean) as ActivityFragment[];
-  };
+  }, [favoriteIds, user?.favoriteActivities]);
 
   return {
     add,
