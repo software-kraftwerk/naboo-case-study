@@ -55,7 +55,7 @@ export const useTopbarStyles = createStyles((theme) => ({
       backgroundColor: theme.fn.lighten(
         theme.fn.variant({ variant: "filled", color: theme.primaryColor })
           .background!,
-        0.1
+        0.1,
       ),
     },
   },

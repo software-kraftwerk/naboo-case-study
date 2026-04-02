@@ -42,7 +42,11 @@ export function MenuItem({ route, label, icon }: Route) {
       <Menu.Dropdown>
         {route.map((item) =>
           item.action === "logout" ? (
-            <Menu.Item key="logout" onClick={handleLogout} className={classes.menuItemLink}>
+            <Menu.Item
+              key="logout"
+              onClick={handleLogout}
+              className={classes.menuItemLink}
+            >
               {item.label}
             </Menu.Item>
           ) : (
@@ -51,7 +55,7 @@ export function MenuItem({ route, label, icon }: Route) {
                 {item.label}
               </Link>
             </Menu.Item>
-          )
+          ),
         )}
       </Menu.Dropdown>
     </Menu>

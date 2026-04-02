@@ -16,17 +16,13 @@ import Signin from "@/graphql/mutations/auth/signin";
 import Signup from "@/graphql/mutations/auth/signup";
 import GetUser from "@/graphql/queries/auth/getUser";
 import { useSnackbar } from "@/hooks";
-import {
-  useLazyQuery,
-  useMutation,
-  useQuery,
-  useApolloClient,
-} from "@apollo/client";
+import { useMutation, useQuery, useApolloClient } from "@apollo/client";
 import { useRouter } from "next/router";
 import { createContext, useEffect, useState } from "react";
 
 interface AuthContextType {
   user: GetUserQuery["getMe"] | null;
+  isAuthenticated: boolean;
   isLoading: boolean;
   handleSignin: (input: SignInInput) => Promise<void>;
   handleSignup: (input: SignUpInput) => Promise<void>;
@@ -35,6 +31,7 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType>({
   user: null,
+  isAuthenticated: false,
   isLoading: false,
   handleSignin: () => Promise.resolve(),
   handleSignup: () => Promise.resolve(),
@@ -56,24 +53,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [signup] = useMutation<SignupMutation, SignupMutationVariables>(Signup);
   const [logout] = useMutation<LogoutMutation, LogoutMutationVariables>(Logout);
 
-  const { refetch: getUser } = useQuery(GetUser, {
+  useQuery<GetUserQuery, GetUserQueryVariables>(GetUser, {
     onCompleted: (data) => {
-      setUser(data.getMe || null);
+      setUser(data.getMe);
       setIsLoading(false);
     },
-    onError: (err) => {
-      snackbar.error(err.message);
-      setIsLoading(false);
-    },
+    onError: () => setIsLoading(false),
   });
 
   const handleSignin = async (input: SignInInput) => {
     try {
       setIsLoading(true);
       await signin({ variables: { signInInput: input } });
+      // resetStore re-runs GetUser → queryData updates → useEffect sets user
       await apolloClient.resetStore();
       await router.push("/profil");
-      await getUser().then((res) => setUser(res.data?.getMe || null));
     } catch (err) {
       snackbar.error("Une erreur est survenue");
     } finally {
@@ -109,7 +103,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, handleSignin, handleSignup, handleLogout }}
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        handleSignin,
+        handleSignup,
+        handleLogout,
+      }}
     >
       {children}
     </AuthContext.Provider>
