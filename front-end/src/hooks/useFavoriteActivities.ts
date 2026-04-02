@@ -13,7 +13,7 @@ import RemoveFavoriteActivity from "@/graphql/mutations/favorite/removeFavoriteA
 import ReorderFavoriteActivities from "@/graphql/mutations/favorite/reorderFavoriteActivities";
 import GetUser from "@/graphql/queries/auth/getUser";
 import { ApolloCache, useMutation } from "@apollo/client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { useAuth } from "./useAuth";
 
 // Updates the favoriteActivities field of GetUser directly in cache — no network refetch.
@@ -34,18 +34,6 @@ function updateCacheFavorites(
 
 export function useFavoriteActivities() {
   const { user } = useAuth();
-
-  // Local state for instant optimistic UI feedback before cache propagates.
-  const [favoriteIds, setFavoriteIds] = useState<string[]>(
-    () => user?.favoriteActivities?.map((f) => f.id) ?? [],
-  );
-
-  // Sync local state when the Apollo cache updates (after mutation update callback).
-  const serverKey = user?.favoriteActivities?.map((f) => f.id).join(",") ?? "";
-  useEffect(() => {
-    setFavoriteIds(user?.favoriteActivities?.map((f) => f.id) ?? []);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [serverKey]);
 
   const [addMutation] = useMutation<
     AddFavoriteActivityMutation,
@@ -75,50 +63,40 @@ export function useFavoriteActivities() {
   });
 
   const add = useCallback(
-    (activityId: string) => {
-      setFavoriteIds((prev) => [...prev, activityId]);
-      return addMutation({ variables: { activityId } });
-    },
+    (activityId: string) => addMutation({ variables: { activityId } }),
     [addMutation],
   );
 
   const remove = useCallback(
-    (activityId: string) => {
-      setFavoriteIds((prev) => prev.filter((id) => id !== activityId));
-      return removeMutation({ variables: { activityId } });
-    },
+    (activityId: string) => removeMutation({ variables: { activityId } }),
     [removeMutation],
   );
 
   const toggle = useCallback(
     (activityId: string) => {
-      if (favoriteIds.includes(activityId)) return remove(activityId);
-      return add(activityId);
+      const isFav = (user?.favoriteActivities ?? []).some(
+        (f) => f.id === activityId,
+      );
+      return isFav ? remove(activityId) : add(activityId);
     },
-    [favoriteIds, add, remove],
+    [user?.favoriteActivities, add, remove],
   );
 
   const reorder = useCallback(
-    (activityIds: string[]) => {
-      setFavoriteIds(activityIds);
-      return reorderMutation({ variables: { activityIds } });
-    },
+    (activityIds: string[]) => reorderMutation({ variables: { activityIds } }),
     [reorderMutation],
   );
 
   const isFavorite = useCallback(
-    (activityId: string) => favoriteIds.includes(activityId),
-    [favoriteIds],
+    (activityId: string) =>
+      (user?.favoriteActivities ?? []).some((f) => f.id === activityId),
+    [user?.favoriteActivities],
   );
 
-  const getAll = useCallback((): ActivityFragment[] => {
-    const byId = new Map(
-      (user?.favoriteActivities ?? []).map((a) => [a.id, a]),
-    );
-    return favoriteIds
-      .map((id) => byId.get(id))
-      .filter(Boolean) as ActivityFragment[];
-  }, [favoriteIds, user?.favoriteActivities]);
+  const favorites = useMemo(
+    () => user?.favoriteActivities ?? [],
+    [user?.favoriteActivities],
+  );
 
   return {
     add,
@@ -126,6 +104,6 @@ export function useFavoriteActivities() {
     toggle,
     reorder,
     isFavorite,
-    getAll,
+    favorites,
   };
 }

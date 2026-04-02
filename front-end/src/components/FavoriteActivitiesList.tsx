@@ -1,6 +1,7 @@
 import { ActivityFragment } from "@/graphql/generated/types";
 import { useFavoriteActivities } from "@/hooks";
 import { useGlobalStyles } from "@/utils";
+import { useEffect, useState } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -100,8 +101,10 @@ function SortableItem({ activity, onRemove }: SortableItemProps) {
 }
 
 export function FavoriteActivitiesList() {
-  const { getAll, remove, reorder } = useFavoriteActivities();
-  const favorites = getAll();
+  const { favorites: userFavorites, remove, reorder } = useFavoriteActivities();
+
+  const [favorites, setFavorites] = useState<ActivityFragment[]>(userFavorites);
+
   const favoriteIds = favorites.map((a) => a.id);
 
   const sensors = useSensors(
@@ -111,14 +114,16 @@ export function FavoriteActivitiesList() {
     }),
   );
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
     const oldIndex = favoriteIds.indexOf(active.id as string);
     const newIndex = favoriteIds.indexOf(over.id as string);
+    const newFavorites = arrayMove(favorites, oldIndex, newIndex);
 
-    return reorder(arrayMove(favoriteIds, oldIndex, newIndex));
+    setFavorites(newFavorites);
+    await reorder(newFavorites.map((a) => a.id));
   };
 
   if (!favorites.length)
@@ -139,7 +144,10 @@ export function FavoriteActivitiesList() {
             <SortableItem
               key={activity.id}
               activity={activity}
-              onRemove={remove}
+              onRemove={async (id) => {
+                const newFavorites = await remove(id);
+                setFavorites(newFavorites.data?.removeFavoriteActivity ?? []);
+              }}
             />
           ))}
         </Flex>
