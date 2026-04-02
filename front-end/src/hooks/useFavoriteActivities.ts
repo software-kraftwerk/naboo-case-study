@@ -112,6 +112,5 @@ export function useFavoriteActivities() {
     reorder,
     isFavorite,
     getAll,
-    favoriteIds,
   };
 }

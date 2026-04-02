@@ -100,8 +100,9 @@ function SortableItem({ activity, onRemove }: SortableItemProps) {
 }
 
 export function FavoriteActivitiesList() {
-  const { getAll, remove, reorder, favoriteIds } = useFavoriteActivities();
+  const { getAll, remove, reorder } = useFavoriteActivities();
   const favorites = getAll();
+  const favoriteIds = favorites.map((a) => a.id);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
