@@ -13,7 +13,7 @@ import RemoveFavoriteActivity from "@/graphql/mutations/favorite/removeFavoriteA
 import ReorderFavoriteActivities from "@/graphql/mutations/favorite/reorderFavoriteActivities";
 import GetUser from "@/graphql/queries/auth/getUser";
 import { ApolloCache, useMutation } from "@apollo/client";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "./useAuth";
 
 // Updates the favoriteActivities field of GetUser directly in cache — no network refetch.
@@ -34,6 +34,18 @@ function updateCacheFavorites(
 
 export function useFavoriteActivities() {
   const { user } = useAuth();
+
+  // Local state for instant optimistic UI feedback before cache propagates.
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(
+    () => user?.favoriteActivities?.map((f) => f.id) ?? [],
+  );
+
+  // Sync local state when the Apollo cache updates (after mutation update callback).
+  const serverKey = user?.favoriteActivities?.map((f) => f.id).join(",") ?? "";
+  useEffect(() => {
+    setFavoriteIds(user?.favoriteActivities?.map((f) => f.id) ?? []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverKey]);
 
   const [addMutation] = useMutation<
     AddFavoriteActivityMutation,
@@ -63,72 +75,50 @@ export function useFavoriteActivities() {
   });
 
   const add = useCallback(
-    (activity: ActivityFragment) => {
-      return addMutation({
-        variables: { activityId: activity.id },
-        optimisticResponse: {
-          addFavoriteActivity: [
-            ...(user?.favoriteActivities ?? []),
-            { __typename: "Activity" as const, ...activity },
-          ],
-        },
-      });
+    (activityId: string) => {
+      setFavoriteIds((prev) => [...prev, activityId]);
+      return addMutation({ variables: { activityId } });
     },
-    [addMutation, user?.favoriteActivities],
+    [addMutation],
   );
 
   const remove = useCallback(
     (activityId: string) => {
-      return removeMutation({
-        variables: { activityId },
-        optimisticResponse: {
-          removeFavoriteActivity: (user?.favoriteActivities ?? []).filter(
-            (a) => a.id !== activityId,
-          ),
-        },
-      });
+      setFavoriteIds((prev) => prev.filter((id) => id !== activityId));
+      return removeMutation({ variables: { activityId } });
     },
-    [removeMutation, user?.favoriteActivities],
+    [removeMutation],
   );
 
   const toggle = useCallback(
-    (activity: ActivityFragment) => {
-      const isFav = (user?.favoriteActivities ?? []).some(
-        (f) => f.id === activity.id,
-      );
-      if (isFav) return remove(activity.id);
-      return add(activity);
+    (activityId: string) => {
+      if (favoriteIds.includes(activityId)) return remove(activityId);
+      return add(activityId);
     },
-    [user?.favoriteActivities, add, remove],
+    [favoriteIds, add, remove],
   );
 
   const reorder = useCallback(
     (activityIds: string[]) => {
-      const byId = new Map(
-        (user?.favoriteActivities ?? []).map((a) => [a.id, a]),
-      );
-      return reorderMutation({
-        variables: { activityIds },
-        optimisticResponse: {
-          reorderFavoriteActivities: activityIds
-            .map((id) => byId.get(id))
-            .filter(Boolean) as ActivityFragment[],
-        },
-      });
+      setFavoriteIds(activityIds);
+      return reorderMutation({ variables: { activityIds } });
     },
-    [reorderMutation, user?.favoriteActivities],
+    [reorderMutation],
   );
 
   const isFavorite = useCallback(
-    (activityId: string) =>
-      (user?.favoriteActivities ?? []).some((f) => f.id === activityId),
-    [user?.favoriteActivities],
+    (activityId: string) => favoriteIds.includes(activityId),
+    [favoriteIds],
   );
 
-  const getAll = useCallback(
-    (): ActivityFragment[] => user?.favoriteActivities ?? [],
-    [user?.favoriteActivities],
-  );
+  const getAll = useCallback((): ActivityFragment[] => {
+    const byId = new Map(
+      (user?.favoriteActivities ?? []).map((a) => [a.id, a]),
+    );
+    return favoriteIds
+      .map((id) => byId.get(id))
+      .filter(Boolean) as ActivityFragment[];
+  }, [favoriteIds, user?.favoriteActivities]);
 
   return {
     add,
