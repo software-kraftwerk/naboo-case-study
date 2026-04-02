@@ -5,7 +5,7 @@ import {
   GetActivityQueryVariables,
 } from "@/graphql/generated/types";
 import GetActivity from "@/graphql/queries/activity/getActivity";
-import { useFavoriteActivities } from "@/hooks";
+import { useFavoriteActivities, useAuth } from "@/hooks";
 import {
   ActionIcon,
   Badge,
@@ -41,7 +41,8 @@ export const getServerSideProps: GetServerSideProps<
 
 export default function ActivityDetails({ activity }: ActivityDetailsProps) {
   const router = useRouter();
-  const { isFavorite, toggle, isAuthenticated } = useFavoriteActivities();
+  const { isFavorite, toggle } = useFavoriteActivities();
+  const { isAuthenticated } = useAuth();
 
   return (
     <>

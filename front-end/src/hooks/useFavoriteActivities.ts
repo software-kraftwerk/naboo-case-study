@@ -113,6 +113,5 @@ export function useFavoriteActivities() {
     isFavorite,
     getAll,
     favoriteIds,
-    isAuthenticated: !!user,
   };
 }

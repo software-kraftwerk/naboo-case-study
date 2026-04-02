@@ -1,5 +1,6 @@
 import { ActivityFragment } from "@/graphql/generated/types";
 import { useFavoriteActivities } from "@/hooks";
+import { useAuth } from "@/hooks";
 import { useGlobalStyles } from "@/utils";
 import {
   ActionIcon,
@@ -21,7 +22,8 @@ interface ActivityProps {
 
 export function Activity({ activity }: ActivityProps) {
   const { classes } = useGlobalStyles();
-  const { isFavorite, toggle, isAuthenticated } = useFavoriteActivities();
+  const { isFavorite, toggle } = useFavoriteActivities();
+  const { isAuthenticated } = useAuth();
   const activityIsFavorite = isFavorite(activity.id);
 
   return (
