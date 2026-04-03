@@ -32,7 +32,8 @@ export function ActivityListItem({ activity }: ActivityListItemProps) {
           >{`${activity.price}€/j`}</Text>
           {isAdmin && (
             <Text size="xs" color="dimmed">
-              Créé le {new Date(activity.createdAt).toLocaleDateString("fr-FR")}
+              Créée le{" "}
+              {new Date(activity.createdAt).toLocaleDateString("fr-FR")}
             </Text>
           )}
         </Box>

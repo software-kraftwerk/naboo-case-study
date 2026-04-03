@@ -44,7 +44,7 @@ export function Activity({ activity }: ActivityProps) {
 
         {isAdmin && (
           <Text size="xs" color="dimmed" mt="xs">
-            Créé le {new Date(activity.createdAt).toLocaleDateString("fr-FR")}
+            Créée le {new Date(activity.createdAt).toLocaleDateString("fr-FR")}
           </Text>
         )}
 

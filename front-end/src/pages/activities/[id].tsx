@@ -66,7 +66,7 @@ export default function ActivityDetails({ activity }: ActivityDetailsProps) {
             </Text>
             {isAdmin && (
               <Text size="xs" color="dimmed">
-                Créé le{" "}
+                Créée le{" "}
                 {new Date(activity.createdAt).toLocaleDateString("fr-FR")}
               </Text>
             )}
