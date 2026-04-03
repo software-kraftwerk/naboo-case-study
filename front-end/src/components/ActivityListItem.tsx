@@ -1,4 +1,5 @@
 import { ActivityFragment } from "@/graphql/generated/types";
+import { useAuth } from "@/hooks";
 import { useGlobalStyles } from "@/utils";
 import { Box, Button, Flex, Image, Text } from "@mantine/core";
 import Link from "next/link";
@@ -9,6 +10,7 @@ interface ActivityListItemProps {
 
 export function ActivityListItem({ activity }: ActivityListItemProps) {
   const { classes } = useGlobalStyles();
+  const { isAdmin } = useAuth();
 
   return (
     <Flex align="center" justify="space-between">
@@ -28,6 +30,11 @@ export function ActivityListItem({ activity }: ActivityListItemProps) {
             weight="bold"
             className={classes.ellipsis}
           >{`${activity.price}€/j`}</Text>
+          {isAdmin && activity.createdAt && (
+            <Text size="xs" color="dimmed">
+              Créé le {new Date(activity.createdAt).toLocaleDateString("fr-FR")}
+            </Text>
+          )}
         </Box>
       </Flex>
       <Link href={`/activities/${activity.id}`} className={classes.link}>

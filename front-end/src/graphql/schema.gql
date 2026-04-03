@@ -58,4 +58,5 @@ type User {
   firstName: String!
   id: ID!
   lastName: String!
+  role: String!
 }
