@@ -10,12 +10,18 @@ import {
   SignupMutation,
   SignupMutationVariables,
 } from "@/graphql/generated/types";
+
 import Logout from "@/graphql/mutations/auth/logout";
 import Signin from "@/graphql/mutations/auth/signin";
 import Signup from "@/graphql/mutations/auth/signup";
 import GetUser from "@/graphql/queries/auth/getUser";
 import { useSnackbar } from "@/hooks";
-import { useLazyQuery, useMutation } from "@apollo/client";
+import {
+  useLazyQuery,
+  useMutation,
+  useQuery,
+  useApolloClient,
+} from "@apollo/client";
 import { useRouter } from "next/router";
 import { createContext, useEffect, useState } from "react";
 
@@ -41,35 +47,33 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const snackbar = useSnackbar();
+  const apolloClient = useApolloClient();
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<GetUserQuery["getMe"] | null>(null);
   const router = useRouter();
 
-  const [getUser] = useLazyQuery<GetUserQuery, GetUserQueryVariables>(GetUser);
   const [signin] = useMutation<SigninMutation, SigninMutationVariables>(Signin);
   const [signup] = useMutation<SignupMutation, SignupMutationVariables>(Signup);
   const [logout] = useMutation<LogoutMutation, LogoutMutationVariables>(Logout);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    if (!user && token) {
-      getUser()
-        .then((res) => setUser(res.data?.getMe || null))
-        .finally(() => setIsLoading(false));
-    } else {
+  const { refetch: getUser } = useQuery(GetUser, {
+    onCompleted: (data) => {
+      setUser(data.getMe || null);
       setIsLoading(false);
-    }
-  }, [user]);
+    },
+    onError: (err) => {
+      snackbar.error(err.message);
+      setIsLoading(false);
+    },
+  });
 
   const handleSignin = async (input: SignInInput) => {
     try {
       setIsLoading(true);
-      const response = await signin({ variables: { signInInput: input } });
-      const token = response.data?.login?.access_token || "";
-      localStorage.setItem("token", token);
+      await signin({ variables: { signInInput: input } });
+      await apolloClient.resetStore();
+      await router.push("/profil");
       await getUser().then((res) => setUser(res.data?.getMe || null));
-      router.push("/profil");
     } catch (err) {
       snackbar.error("Une erreur est survenue");
     } finally {
@@ -93,7 +97,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setIsLoading(true);
       await logout();
-      localStorage.removeItem("token");
+      await apolloClient.clearStore();
       setUser(null);
       router.push("/");
     } catch (err) {

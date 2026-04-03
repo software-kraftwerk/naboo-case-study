@@ -3,26 +3,26 @@ import { randomUUID } from 'crypto';
 import { BaseAppModule } from './app.module';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
+import * as cookieParser from 'cookie-parser';
 import { TestModule, closeInMongodConnection } from './test/test.module';
 
 describe('App e2e', () => {
   let app: INestApplication;
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [TestModule, BaseAppModule],
     }).compile();
 
     app = module.createNestApplication();
+    app.use(cookieParser());
     await app.init();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await app.close();
+    await closeInMongodConnection();
   });
 
-  afterAll(async () => {
-    closeInMongodConnection();
-  });
   it('app should be defined', () => {
     expect(app).toBeDefined();
   });
@@ -52,21 +52,23 @@ describe('App e2e', () => {
       .send({
         query: `
           mutation {
-            login(signInInput:{ email: "${email}", password: "${password}" }) {
-              access_token
-            }
+            login(signInInput:{ email: "${email}", password: "${password}" })
           }
         `,
       })
       .expect(200);
 
     expect(signInResponse.status).toBe(200);
-    const jwt = signInResponse.body.data.login.access_token;
-    expect(jwt).toEqual(expect.any(String));
+    expect(signInResponse.body.data.login).toBe(true);
+
+    const cookies = signInResponse.headers['set-cookie'] as unknown as string[];
+    expect(cookies).toBeDefined();
+    const jwtCookie = cookies.find((c) => c.startsWith('jwt='));
+    expect(jwtCookie).toBeDefined();
 
     const getMeResponse = await request(app.getHttpServer())
       .post('/graphql')
-      .set('jwt', jwt)
+      .set('Cookie', jwtCookie!)
       .send({
         query: `
           query {

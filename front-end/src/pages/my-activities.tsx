@@ -16,6 +16,7 @@ interface MyActivitiesProps {
   activities: GetUserActivitiesQuery["getActivitiesByUser"];
 }
 
+// TODO: handle UnauthorizedException error from `GetUserActivities` and redirect to /signin
 export const getServerSideProps: GetServerSideProps<
   MyActivitiesProps
 > = async ({ req }) => {

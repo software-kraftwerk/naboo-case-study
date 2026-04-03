@@ -1,4 +1,4 @@
-import { Module, UnauthorizedException } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ActivityModule } from './activity/activity.module';
@@ -12,12 +12,15 @@ import { UserModule } from './user/user.module';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { JwtModule, JwtService } from '@nestjs/jwt';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { PayloadDto } from './auth/types/jwtPayload.dto';
+import { appConfig } from './config/app.config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, load: [appConfig] }),
+    ThrottlerModule.forRoot([{ name: 'login', ttl: 60_000, limit: 0 }]),
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
       imports: [JwtModule],
@@ -30,11 +33,10 @@ import { PayloadDto } from './auth/types/jwtPayload.dto';
         return {
           autoSchemaFile: 'schema.gql',
           sortSchema: true,
-          playground: true,
+          playground: !configService.get<boolean>('isProduction'),
           buildSchemaOptions: { numberScalarMode: 'integer' },
           context: async ({ req, res }: { req: Request; res: Response }) => {
-            const token =
-              req.headers.jwt ?? (req.cookies && req.cookies['jwt']);
+            const token: string | undefined = req.cookies && req.cookies.jwt;
 
             let jwtPayload: PayloadDto | null = null;
             if (token) {
@@ -42,8 +44,8 @@ import { PayloadDto } from './auth/types/jwtPayload.dto';
                 jwtPayload = (await jwtService.verifyAsync(token, {
                   secret,
                 })) as PayloadDto;
-              } catch (error) {
-                throw new UnauthorizedException(error);
+              } catch {
+                jwtPayload = null;
               }
             }
 
@@ -71,8 +73,9 @@ export class BaseAppModule {}
   imports: [
     BaseAppModule,
     MongooseModule.forRootAsync({
-      useFactory: () => {
-        return { uri: process.env.MONGO_URI };
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        return { uri: configService.get('MONGO_URI') };
       },
     }),
   ],

@@ -4,7 +4,7 @@
 
 type Activity {
   city: String!
-  createdAt: DateTime
+  createdAt: DateTime!
   description: String!
   id: ID!
   name: String!
@@ -26,7 +26,7 @@ scalar DateTime
 
 type Mutation {
   createActivity(createActivityInput: CreateActivityInput!): Activity!
-  login(signInInput: SignInInput!): SignInDto!
+  login(signInInput: SignInInput!): Boolean!
   logout: Boolean!
   register(signUpInput: SignUpInput!): User!
 }
@@ -39,10 +39,6 @@ type Query {
   getCities: [String!]!
   getLatestActivities: [Activity!]!
   getMe: User!
-}
-
-type SignInDto {
-  access_token: String!
 }
 
 input SignInInput {
@@ -62,5 +58,4 @@ type User {
   firstName: String!
   id: ID!
   lastName: String!
-  password: String!
 }

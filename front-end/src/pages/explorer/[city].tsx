@@ -54,15 +54,17 @@ export default function ActivityDetails({
   const searchParams = useSearchParams();
 
   const [searchActivity, setSearchActivity] = useState<string | undefined>(
-    searchParams?.get("activity") || undefined
+    searchParams?.get("activity") || undefined,
   );
   const debouncedSearchActivity = useDebounced(searchActivity, 300);
 
   const [searchPrice, setSearchPrice] = useState<number | undefined>(
-    searchParams?.get("price") ? Number(searchParams.get("price")) : undefined
+    searchParams?.get("price") ? Number(searchParams.get("price")) : undefined,
   );
   const debouncedSearchPrice = useDebounced(searchPrice, 300);
 
+  // GOOD: we debounce filter changes to avoid flooding the API
+  // BAD: this useEffect is executed when this component is mounted, unnecessarily pushing a new route
   useEffect(() => {
     const searchParams = new URLSearchParams();
 
@@ -74,8 +76,6 @@ export default function ActivityDetails({
 
     const stringParams = searchParams.toString();
     router.push(`/explorer/${city}${stringParams ? `?${stringParams}` : ""}`);
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [city, debouncedSearchActivity, debouncedSearchPrice]);
 
   return (
