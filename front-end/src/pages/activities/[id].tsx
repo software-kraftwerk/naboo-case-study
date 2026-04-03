@@ -64,7 +64,7 @@ export default function ActivityDetails({ activity }: ActivityDetailsProps) {
             <Text size="sm" color="dimmed">
               Ajouté par {activity.owner.firstName} {activity.owner.lastName}
             </Text>
-            {isAdmin && activity.createdAt && (
+            {isAdmin && (
               <Text size="xs" color="dimmed">
                 Créé le{" "}
                 {new Date(activity.createdAt).toLocaleDateString("fr-FR")}

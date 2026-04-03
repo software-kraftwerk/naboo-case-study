@@ -30,7 +30,7 @@ export function ActivityListItem({ activity }: ActivityListItemProps) {
             weight="bold"
             className={classes.ellipsis}
           >{`${activity.price}€/j`}</Text>
-          {isAdmin && activity.createdAt && (
+          {isAdmin && (
             <Text size="xs" color="dimmed">
               Créé le {new Date(activity.createdAt).toLocaleDateString("fr-FR")}
             </Text>
